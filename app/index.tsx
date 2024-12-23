@@ -148,149 +148,152 @@ const TodoListScreen: React.FC = () => {
   // Render
   return (
     <TouchableWithoutFeedback onPress={handleScreenPress}>
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Todo List</Text>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.title}>Todo List</Text>
 
-      {/* Search input */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search todos..."
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={fetchTodos} // Trigger search when button is pressed
-        >
-          <Text style={styles.searchButtonText}>Search</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Status Filter */}
-      <View style={styles.filterContainer}>
-        <Text>Filter by Status:</Text>
-        <Picker
-          selectedValue={filterStatus}
-          style={styles.picker}
-          onValueChange={(itemValue) => setFilterStatus(itemValue)}
-        >
-          <Picker.Item label="All" value="all" />
-          <Picker.Item label="Not Started" value="not started" />
-          <Picker.Item label="In Progress" value="in progress" />
-          <Picker.Item label="Completed" value="completed" />
-        </Picker>
-      </View>
-
-      {/* Todo List */}
-      <FlatList
-        data={todos}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => (
-          <TodoItem
-            key={item.id}
-            todo={item}
-            onEdit={() => {
-              setOpenMenuId(null);
-              openEditModal(item);
-            } }
-            onDelete={() => {
-              setOpenMenuId(null);
-              handleDeleteTodo(item.id);
-            } }
-            onView={() => {
-              setOpenMenuId(null);
-              handleViewTodo(item);
-            } }
-            menuVisible={openMenuId === item.id}
-            onToggleMenu={(isVisible) => {
-              setOpenMenuId(isVisible ? item.id : null);
-
-            } } 
-            viewVisible={openDetails === item.id} 
-            onToggleView={(isVisible) => {
-              setOpenMenuId(null);
-              setOpenDetails(isVisible ? item.id : null);
-            }}          />
-        )}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={fetchTodos}
+        {/* Search input */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search todos..."
+            value={searchText}
+            onChangeText={setSearchText}
           />
-        }
-        ListEmptyComponent={
-          isLoading ? (
-            <ActivityIndicator size="large" color="#666" style={{ marginTop: 50 }} />
-          ) : (
-            <Text style={styles.emptyText}>No todos found</Text>
-          )
-        }
-      />
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={fetchTodos} // Trigger search when button is pressed
+          >
+            <Text style={styles.searchButtonText}>Search</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Add Todo Button */}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => {
-          setSelectedTodo(null);
-          setIsCreateModalVisible(true);
-        }}
-        disabled={isProcessing}
-      >
-        <Text style={styles.addButtonText}>+ Add Todo</Text>
-      </TouchableOpacity>
+        {/* Status Filter */}
+        <View style={styles.filterContainer}>
+          <Text style={styles.filterLabel}>Filter by Status:</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={filterStatus}
+              style={styles.picker}
+              onValueChange={(itemValue) => setFilterStatus(itemValue)}
+            >
+              <Picker.Item label="All" value="all" />
+              <Picker.Item label="Not Started" value="not started" />
+              <Picker.Item label="In Progress" value="in progress" />
+              <Picker.Item label="Completed" value="completed" />
+            </Picker>
+          </View>
+        </View>
 
-      {/* Create/Edit Todo Modal */}
-      <CreateTodoModal
-        loading={isProcessing}
-        visible={isCreateModalVisible}
-        todo={selectedTodo}
-        onClose={() => {
-          setIsCreateModalVisible(false);
-          setSelectedTodo(null);
-        }}
-        onSubmit={async (todoData) => {
-          if (selectedTodo) {
-            await handleUpdateTodo(todoData as Partial<TodoFormData>);
-          } else {
-            await handleCreateTodo(todoData as Omit<Todo, 'id'>);
+
+        {/* Todo List */}
+        <FlatList
+          data={todos}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => (
+            <TodoItem
+              key={item.id}
+              todo={item}
+              onEdit={() => {
+                setOpenMenuId(null);
+                openEditModal(item);
+              }}
+              onDelete={() => {
+                setOpenMenuId(null);
+                handleDeleteTodo(item.id);
+              }}
+              onView={() => {
+                setOpenMenuId(null);
+                handleViewTodo(item);
+              }}
+              menuVisible={openMenuId === item.id}
+              onToggleMenu={(isVisible) => {
+                setOpenMenuId(isVisible ? item.id : null);
+
+              }}
+              viewVisible={openDetails === item.id}
+              onToggleView={(isVisible) => {
+                setOpenMenuId(null);
+                setOpenDetails(isVisible ? item.id : null);
+              }} />
+          )}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={fetchTodos}
+            />
           }
-        }}
-      />
-
-      {/* View Todo Modal */}
-      <ViewModal
-        loading={isProcessing}
-        visible={isViewModalVisible}
-        onClose={() => {
-          setIsViewModalVisible(false);
-          setSelectedTodo(null);
-        }}
-        todo={selectedTodo || {
-          id: 0,
-          title: '',
-          description: '',
-          status: 'completed',
-        } as unknown as Todo} 
-
-        onDelete={async () => {
-          if (selectedTodo) {
-            await handleDeleteTodo(selectedTodo.id);;
+          ListEmptyComponent={
+            isLoading ? (
+              <ActivityIndicator size="large" color="#666" style={{ marginTop: 50 }} />
+            ) : (
+              <Text style={styles.emptyText}>No todos found</Text>
+            )
           }
-        }} 
-        onSubmit={async (todoData) => {
-          if (selectedTodo) {
-            await handleUpdateTodo(todoData as Partial<TodoFormData>);
-          } else {
-            await handleCreateTodo(todoData as Omit<Todo, 'id'>);
-          }
-        }}/>
+        />
 
-      {/* Show overlay loader when processing */}
-      {isProcessing && <FullScreenLoader />}
+        {/* Add Todo Button */}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            setSelectedTodo(null);
+            setIsCreateModalVisible(true);
+          }}
+          disabled={isProcessing}
+        >
+          <Text style={styles.addButtonText}>+ Add Todo</Text>
+        </TouchableOpacity>
 
-      <Toast />
-    </SafeAreaView>
+        {/* Create/Edit Todo Modal */}
+        <CreateTodoModal
+          loading={isProcessing}
+          visible={isCreateModalVisible}
+          todo={selectedTodo}
+          onClose={() => {
+            setIsCreateModalVisible(false);
+            setSelectedTodo(null);
+          }}
+          onSubmit={async (todoData) => {
+            if (selectedTodo) {
+              await handleUpdateTodo(todoData as Partial<TodoFormData>);
+            } else {
+              await handleCreateTodo(todoData as Omit<Todo, 'id'>);
+            }
+          }}
+        />
+
+        {/* View Todo Modal */}
+        <ViewModal
+          loading={isProcessing}
+          visible={isViewModalVisible}
+          onClose={() => {
+            setIsViewModalVisible(false);
+            setSelectedTodo(null);
+          }}
+          todo={selectedTodo || {
+            id: 0,
+            title: '',
+            description: '',
+            status: 'completed',
+          } as unknown as Todo}
+
+          onDelete={async () => {
+            if (selectedTodo) {
+              await handleDeleteTodo(selectedTodo.id);;
+            }
+          }}
+          onSubmit={async (todoData) => {
+            if (selectedTodo) {
+              await handleUpdateTodo(todoData as Partial<TodoFormData>);
+            } else {
+              await handleCreateTodo(todoData as Omit<Todo, 'id'>);
+            }
+          }} />
+
+        {/* Show overlay loader when processing */}
+        {isProcessing && <FullScreenLoader />}
+
+        <Toast />
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
@@ -312,6 +315,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3, // For Android shadow
   },
   searchInput: {
     flex: 1,
@@ -331,12 +342,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   filterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    padding: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3, // For Android shadow
+  },
+  filterLabel: {
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: '#cccccc',
+    borderRadius: 4,
+    overflow: 'hidden',
+    backgroundColor: '#f9f9f9',
   },
   picker: {
-    width: 200,
+    height: 50,
+    paddingHorizontal: 8,
+    color: '#333',
   },
   emptyText: {
     textAlign: 'center',
